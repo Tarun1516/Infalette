@@ -140,3 +140,4 @@ pnpm lint
 
 Proprietary — All rights reserved.
 # Infalette
+# Infalette
