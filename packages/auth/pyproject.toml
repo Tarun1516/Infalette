@@ -1,0 +1,23 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "infalette-auth"
+version = "0.1.0"
+description = "Authentication and authorization for infalette"
+requires-python = ">=3.12"
+dependencies = [
+    "python-jose[cryptography]>=3.3.0",
+    "passlib[bcrypt]>=1.7.4",
+    "bcrypt>=4.2.0",
+    "pyotp>=2.9.0",
+    "fastapi>=0.115.0",
+    "pydantic>=2.9.0",
+    "infalette-config>=0.1.0",
+    "infalette-database>=0.1.0",
+    "infalette-validation>=0.1.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/infalette_auth"]

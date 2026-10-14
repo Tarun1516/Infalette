@@ -1,0 +1,1 @@
+"""Checkout management module."""

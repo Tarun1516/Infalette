@@ -1,0 +1,17 @@
+{
+  "name": "@infalette/page-builder",
+  "version": "0.1.0",
+  "description": "Drag-and-drop page builder for Infalette storefronts",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

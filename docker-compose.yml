@@ -1,0 +1,146 @@
+# =============================================================================
+# Infalette — production-shape docker-compose for local development.
+#
+# This file intentionally does NOT include a Postgres service. Production /
+# staging / CI use Neon (managed Postgres 18.6). For local development without
+# a Neon account, run with the `local` profile:
+#
+#   COMPOSE_PROFILES=local docker compose -f docker-compose.yml \
+#     -f docker-compose.local.yml up
+#
+# See .env.example for the DATABASE_URL_POOLED / DATABASE_URL_DIRECT
+# variables the api and workers read.
+# =============================================================================
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: infalette-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/api/Dockerfile
+    container_name: infalette-api
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # Database — Neon. POOLED is used at runtime; DIRECT only by Alembic.
+      DATABASE_URL_POOLED: ${DATABASE_URL_POOLED}
+      DATABASE_URL_DIRECT: ${DATABASE_URL_DIRECT}
+      # S3 media — explicitly referenced for infra hardening
+      S3_BUCKET: ${S3_BUCKET:-infalette-media}
+      S3_REGION: ${S3_REGION:-${AWS_REGION:-ap-south-1}}
+      AWS_REGION: ${AWS_REGION:-ap-south-1}
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      CLOUDFRONT_DOMAIN: ${CLOUDFRONT_DOMAIN:-}
+      S3_PRESIGNED_EXPIRY: ${S3_PRESIGNED_EXPIRY:-3600}
+      S3_MAX_UPLOAD_BYTES: ${S3_MAX_UPLOAD_BYTES:-10485760}
+      S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-false}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      # Bot protection
+      BOT_PROTECTION_ENABLED: ${BOT_PROTECTION_ENABLED:-true}
+      BOT_CHECK_X_BOT_HEADER: ${BOT_CHECK_X_BOT_HEADER:-true}
+      RECAPTCHA_SECRET_KEY: ${RECAPTCHA_SECRET_KEY:-}
+      RECAPTCHA_SITE_KEY: ${RECAPTCHA_SITE_KEY:-}
+      RECAPTCHA_HEADER: ${RECAPTCHA_HEADER:-X-Recaptcha-Token}
+      BOT_RATE_LIMIT_REQUESTS: ${BOT_RATE_LIMIT_REQUESTS:-60}
+      BOT_BLOCK_UNKNOWN: ${BOT_BLOCK_UNKNOWN:-false}
+      # Observability
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otel-collector:4317}
+      OTEL_ENABLED: ${OTEL_ENABLED:-false}
+      OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-infalette-api}
+      OTEL_TRACES_SAMPLER_RATIO: ${OTEL_TRACES_SAMPLER_RATIO:-0.1}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./apps/api:/app/apps/api
+      - ./packages:/app/packages
+    command: uvicorn apps.api.main:app --host 0.0.0.0 --port 8000 --reload
+
+  workers:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/workers/Dockerfile
+    container_name: infalette-workers
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL_POOLED: ${DATABASE_URL_POOLED}
+      DATABASE_URL_DIRECT: ${DATABASE_URL_DIRECT}
+      S3_BUCKET: ${S3_BUCKET:-infalette-media}
+      S3_REGION: ${S3_REGION:-${AWS_REGION:-ap-south-1}}
+      AWS_REGION: ${AWS_REGION:-ap-south-1}
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      CLOUDFRONT_DOMAIN: ${CLOUDFRONT_DOMAIN:-}
+      S3_PRESIGNED_EXPIRY: ${S3_PRESIGNED_EXPIRY:-3600}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otel-collector:4317}
+      OTEL_ENABLED: ${OTEL_ENABLED:-false}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./apps/workers:/app/apps/workers
+      - ./packages:/app/packages
+    command: celery -A apps.workers.main worker --loglevel=info
+
+  storefront:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/storefront/Dockerfile
+    container_name: infalette-storefront
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./apps/storefront:/app/apps/storefront
+    command: pnpm dev --port 3000
+
+  admin:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/admin/Dockerfile
+    container_name: infalette-admin
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      - api
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./apps/admin:/app/apps/admin
+    command: pnpm dev --port 3001
+
+  platform-admin:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/platform-admin/Dockerfile
+    container_name: infalette-platform-admin
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      - api
+    ports:
+      - "3002:3002"
+    volumes:
+      - ./apps/platform-admin:/app/apps/platform-admin
+    command: pnpm dev --port 3002

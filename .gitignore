@@ -1,0 +1,65 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS
+Thumbs.db
+
+# Docker
+*.pid
+*.log
+.run.pids
+
+# Coverage
+.coverage
+htmlcov/
+.coverage.*
+.pytest_cache/
+.tox/
+
+# Turborepo
+.turbo/
+
+# Next.js
+.next/
+out/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Media
+uploads/
+media/
+
+# Sentry
+.sentryclirc
+
+# Python
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/

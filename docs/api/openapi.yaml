@@ -1,0 +1,12 @@
+openapi: 3.0.0
+info:
+  title: Infalette API
+  version: 0.1.0
+  description: Multi-tenant, headless commerce SaaS for influencers
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: Service is healthy

@@ -1,0 +1,37 @@
+# =============================================================================
+# Infalette — local Postgres overlay.
+#
+# Production / staging / CI use Neon. This overlay is for contributors who
+# want a fully self-contained local stack without a Neon account.
+#
+# Usage:
+#   COMPOSE_PROFILES=local docker compose -f docker-compose.yml \
+#     -f docker-compose.local.yml up
+#
+# When this overlay is active, set DATABASE_URL_POOLED and DATABASE_URL_DIRECT
+# in .env to the local container (defaults are filled in .env.example).
+# =============================================================================
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: infalette-postgres
+    restart: unless-stopped
+    profiles: ["local"]
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-infalette}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-infalette}
+      POSTGRES_DB: ${POSTGRES_DB:-infalette}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/docker/postgres/00-bootstrap.sql:/docker-entrypoint-initdb.d/00-bootstrap.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-infalette}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

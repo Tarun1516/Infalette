@@ -1,0 +1,49 @@
+# Sentry Configuration for Infalette
+# This file configures Sentry for error tracking and performance monitoring.
+
+sentry:
+  dsn: ${SENTRY_DSN}
+  environment: ${NODE_ENV:-development}
+  release: ${GITHUB_SHA:-latest}
+  traces_sample_rate: 1.0
+  profiles_sample_rate: 1.0
+  error_sample_rate: 1.0
+
+  # Filter out non-error logs
+  before_send:
+    - type: "http_response"
+      condition: "response.status_code < 500"
+
+  # Ignore specific errors
+  ignore_errors:
+    - "ValidationError"
+    - "RateLimitError"
+    - "ECONNRESET"
+    - "ETIMEDOUT"
+
+  # Attach additional context
+  attach_stacktrace: true
+  send_default_pii: false
+
+  # Performance monitoring
+  performance_monitoring:
+    enabled: true
+    transaction_sampleRate: 1.0
+    db_query: true
+    http_client: true
+    middleware: true
+
+  # Release tracking
+  release_tracking:
+    enabled: true
+    git_sha: ${GITHUB_SHA}
+
+  # Breadcrumbs
+  breadcrumbs:
+    enabled: true
+    max_breadcrumbs: 100
+
+  # User context
+  user_context:
+    enabled: true
+    fields: ["id", "email", "tenant_id"]

@@ -1,0 +1,68 @@
+{
+  "$schema": "https://turbo.build/build.json",
+  "pipeline": {
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**", "build/**"]
+    },
+    "lint": {
+      "outputs": []
+    },
+    "lint:fix": {
+      "outputs": []
+    },
+    "type-check": {
+      "outputs": []
+    },
+    "test": {
+      "dependsOn": ["build"],
+      "outputs": []
+    },
+    "test:unit": {
+      "dependsOn": ["build"],
+      "outputs": []
+    },
+    "test:integration": {
+      "dependsOn": ["build"],
+      "outputs": []
+    },
+    "test:e2e": {
+      "dependsOn": ["build"],
+      "outputs": []
+    },
+    "db:migrate": {
+      "outputs": []
+    },
+    "db:generate": {
+      "outputs": []
+    },
+    "db:seed": {
+      "outputs": []
+    },
+    "clean": {
+      "outputs": []
+    }
+  },
+  "globalEnv": [
+    "NODE_ENV",
+    "DATABASE_URL",
+    "REDIS_URL",
+    "SECRET_KEY",
+    "RAZORPAY_KEY_ID",
+    "RAZORPAY_KEY_SECRET",
+    "STRIPE_SECRET_KEY",
+    "INSTAGRAM_CLIENT_ID",
+    "INSTAGRAM_CLIENT_SECRET",
+    "WHATSAPP_TOKEN",
+    "WHATSAPP_PHONE_NUMBER_ID",
+    "EMAIL_FROM",
+    "AWS_ACCESS_KEY_ID",
+    "AWS_SECRET_ACCESS_KEY",
+    "AWS_REGION",
+    "S3_BUCKET"
+  ]
+}

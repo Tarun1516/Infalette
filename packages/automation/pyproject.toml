@@ -1,0 +1,19 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "infalette-automation"
+version = "0.1.0"
+description = "automation package for infalette"
+requires-python = ">=3.12"
+dependencies = [
+    "sqlalchemy>=2.0.0",
+    "pydantic>=2.9.0",
+    "infalette-config>=0.1.0",
+    "infalette-database>=0.1.0",
+    "infalette-validation>=0.1.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/infalette_automation"]

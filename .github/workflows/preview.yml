@@ -1,0 +1,58 @@
+name: Preview Environment
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches: [main, develop]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  preview:
+    name: Deploy Preview
+    runs-on: ubuntu-latest
+    if: github.event.action != 'closed'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pnpm install --no-frozen-lockfile
+      - run: pip install -e packages/database -e packages/config -e packages/validation -e packages/auth -e packages/commerce -e packages/automation -e packages/analytics -e packages/seo -e packages/integrations -e apps/api -e apps/workers
+      - name: Build Docker images
+        run: |
+          docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/api:pr-${{ github.event.pull_request.number }} -f infrastructure/docker/api/Dockerfile .
+          docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/storefront:pr-${{ github.event.pull_request.number }} -f infrastructure/docker/storefront/Dockerfile .
+      - name: Deploy to preview environment
+        run: |
+          echo "Preview build complete for PR #${{ github.event.pull_request.number }} (images tagged pr-${{ github.event.pull_request.number }})"
+          echo "Automated deploy is not yet connected — attach your staging deploy step here (see docs/runbooks/onboarding.md)."
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'Preview images built for this PR (`pr-${{ github.event.pull_request.number }}`). Automated deploy is not yet wired — see `docs/runbooks/onboarding.md` for manual preview steps.'
+            })
+
+  cleanup:
+    name: Cleanup Preview
+    runs-on: ubuntu-latest
+    if: github.event.action == 'closed'
+    steps:
+      - name: Cleanup
+        run: |
+          echo "Cleaning up preview environment for PR #${{ github.event.pull_request.number }}"
+          # Cleanup logic would go here

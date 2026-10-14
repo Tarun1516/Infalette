@@ -1,0 +1,140 @@
+# OpenTelemetry Collector Configuration for Infalette
+# This file configures the OpenTelemetry Collector for traces, metrics, and logs.
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+  # Collect host metrics
+  hostmetrics:
+    collection_interval: 10s
+    scrapers:
+      cpu: {}
+      memory: {}
+      disk: {}
+      network: {}
+
+  # Collect prometheus metrics
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: "infalette-api"
+          scrape_interval: 10s
+          static_configs:
+            - targets: ["api:8000"]
+        - job_name: "infalette-workers"
+          scrape_interval: 10s
+          static_configs:
+            - targets: ["workers:8001"]
+
+processors:
+  batch:
+    timeout: 5s
+    send_batch_size: 1000
+
+  # Filter out health check requests
+  filter:
+    metrics:
+      exclude:
+        match_type: regexp
+        metric_names:
+          - ".*health.*"
+          - ".*ping.*"
+    logs:
+      exclude:
+        match_type: regexp
+        log_names:
+          - ".*health.*"
+          - ".*ping.*"
+
+  # Add resource attributes
+  resource:
+    attributes:
+      - key: service.name
+        value: "infalette"
+        action: upsert
+      - key: service.version
+        value: "${GITHUB_SHA:-latest}"
+        action: upsert
+      - key: environment
+        value: "${NODE_ENV:-development}"
+        action: upsert
+
+  # Add tenant_id to spans
+  attributes:
+    metrics:
+      - key: tenant_id
+        from_attribute: tenant_id
+        action: insert
+    logs:
+      - key: tenant_id
+        from_attribute: tenant_id
+        action: insert
+
+  # Tail-based sampling
+  tail_sampling:
+    policies:
+      - name: latency
+        type: always_on
+      - name: probabilistic
+        probabilistic:
+          sampling_percentage: 20
+
+exporters:
+  # Export to OTLP (Jaeger, Tempo, etc.)
+  otlp:
+    endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:-localhost:4317}
+    tls:
+      insecure: true
+
+  # Export to Prometheus
+  prometheusremotewrite:
+    endpoint: ${PROMETHEUS_ENDPOINT:-http://prometheus:9090/api/v1/write}
+
+  # Export to Loki for logs
+  loki:
+    endpoint: ${LOKI_ENDPOINT:-http://loki:3100/loki/api/v1/push}
+
+  # Export to console (for debugging)
+  logging:
+    loglevel: debug
+
+  # Export to S3 for archival
+  awsemf:
+    namespace: "Infalette"
+    region: "${AWS_REGION:-ap-south-1}"
+    log_group_name: "infalette-${NODE_ENV:-development}"
+
+service:
+  pipelines:
+    # Traces pipeline
+    traces:
+      receivers: [otlp]
+      processors: [batch, resource, attributes, tail_sampling]
+      exporters: [otlp, logging]
+
+    # Metrics pipeline
+    metrics:
+      receivers: [otlp, hostmetrics, prometheus]
+      processors: [batch, resource, filter]
+      exporters: [prometheusremotewrite, logging]
+
+    # Logs pipeline
+    logs:
+      receivers: [otlp]
+      processors: [batch, resource, filter]
+      exporters: [loki, logging, awsemf]
+
+  # Extensions
+  extensions:
+    health_check:
+      endpoint: 0.0.0.0:13133
+    zpages:
+      endpoint: 0.0.0.0:55679
+    memory_ballast:
+      size_mib: 400
+      mutex_fraction: 0.01

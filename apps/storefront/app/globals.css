@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 255 255 255;
+  --foreground: 17 17 17;
+  --card: 255 255 255;
+  --card-foreground: 17 17 17;
+  --muted: 245 245 247;
+  --muted-foreground: 110 110 115;
+  --border: 229 229 231;
+  --input: 229 229 231;
+  --ring: 10 10 10;
+  --accent: 0 122 255;
+  --accent-foreground: 255 255 255;
+}
+
+html.dark {
+  --background: 0 0 0;
+  --foreground: 245 245 247;
+  --card: 10 10 10;
+  --card-foreground: 245 245 247;
+  --muted: 24 24 27;
+  --muted-foreground: 161 161 170;
+  --border: 38 38 42;
+  --input: 38 38 42;
+  --ring: 245 245 247;
+  --accent: 10 132 255;
+  --accent-foreground: 255 255 255;
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: rgb(var(--background));
+  color: rgb(var(--foreground));
+  min-height: 100vh;
+  letter-spacing: -0.01em;
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+/* Dark-mode fallbacks for inline Tailwind classes that we still
+   want to render as the deep neutral palette. */
+html.dark body {
+  background-color: #000000;
+  color: rgb(245 245 247);
+}
+html.dark .bg-white {
+  background-color: #0a0a0a !important;
+}
+html.dark .bg-gray-50 {
+  background-color: #050505 !important;
+}
+html.dark .bg-gray-100 {
+  background-color: #0a0a0a !important;
+}
+html.dark .bg-gray-800,
+html.dark .bg-gray-900 {
+  background-color: #000000 !important;
+}
+html.dark .text-gray-900,
+html.dark .text-gray-800 {
+  color: rgb(245 245 247) !important;
+}
+html.dark .text-gray-700,
+html.dark .text-gray-600 {
+  color: rgb(212 212 216) !important;
+}
+html.dark .text-gray-500 {
+  color: rgb(161 161 170) !important;
+}
+html.dark .border,
+html.dark .border-gray-200,
+html.dark .border-gray-300,
+html.dark .border-gray-700 {
+  border-color: rgb(38 38 42) !important;
+}
+html.dark .placeholder\:text-gray-500::placeholder {
+  color: rgb(161 161 170) !important;
+}
+html.dark input,
+html.dark textarea,
+html.dark select {
+  background-color: #0a0a0a;
+  color: rgb(245 245 247);
+}
+
+/* Apple-style focus ring */
+*:focus-visible {
+  outline: 2px solid rgb(var(--ring));
+  outline-offset: 2px;
+}

@@ -1,0 +1,1 @@
+"""Infalette automation package."""
