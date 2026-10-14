@@ -1,10 +1,11 @@
 """Run migration 003 step by step using asyncpg to find the abort cause."""
 import asyncio
+import os
 import asyncpg
 
 async def main():
     conn = await asyncpg.connect(
-        'postgresql://neondb_owner:***REMOVED_DB_PASSWORD***@***REMOVED_NEON_HOST***.c-3.ap-southeast-1.aws.neon.tech/neondb?sslmode=require'
+        os.environ.get("DATABASE_URL_DIRECT") or os.environ.get("DATABASE_URL_POOLED")
     )
 
     # Replay the create_table for audit_logs

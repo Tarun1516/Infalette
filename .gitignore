@@ -16,6 +16,12 @@ build/
 .env.development.local
 .env.test.local
 .env.production.local
+apps/*/.env
+packages/*/.env
+
+# Local tooling
+.claude/
+.run.pids
 
 # IDE
 .vscode/
@@ -31,7 +37,7 @@ Thumbs.db
 # Docker
 *.pid
 *.log
-.run.pids
+
 
 # Coverage
 .coverage
