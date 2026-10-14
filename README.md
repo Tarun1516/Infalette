@@ -139,3 +139,4 @@ pnpm lint
 ## License
 
 Proprietary — All rights reserved.
+# Infalette
